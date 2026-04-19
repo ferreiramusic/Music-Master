@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Music Master</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #000005;
+    color: #fff;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    background:
+      radial-gradient(ellipse 50% 40% at 18% 25%, rgba(88, 28, 135, 0.25), transparent 65%),
+      radial-gradient(ellipse 45% 35% at 82% 75%, rgba(37, 99, 235, 0.20), transparent 65%),
+      radial-gradient(ellipse 40% 30% at 65% 20%, rgba(109, 40, 217, 0.18), transparent 70%),
+      #000005;
+  }
+  .stars, .stars2, .stars3 {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+  }
+  .stars {
+    background-image:
+      radial-gradient(1px 1px at 3% 7%, #fff, transparent),
+      radial-gradient(1px 1px at 8% 22%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1.5px 1.5px at 14% 41%, #fff, transparent),
+      radial-gradient(1px 1px at 19% 58%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1px 1px at 24% 74%, rgba(255,255,255,0.9), transparent),
+      radial-gradient(1.5px 1.5px at 29% 89%, #fff, transparent),
+      radial-gradient(1px 1px at 33% 11%, rgba(200,220,255,0.85), transparent),
+      radial-gradient(1px 1px at 38% 27%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(2px 2px at 43% 45%, #fff, transparent),
+      radial-gradient(1px 1px at 48% 63%, rgba(255,255,255,0.75), transparent),
+      radial-gradient(1px 1px at 53% 81%, rgba(220,210,255,0.8), transparent),
+      radial-gradient(1.5px 1.5px at 58% 5%, #fff, transparent),
+      radial-gradient(1px 1px at 63% 24%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1px 1px at 67% 42%, rgba(255,255,255,0.85), transparent),
+      radial-gradient(1.5px 1.5px at 72% 59%, #fff, transparent),
+      radial-gradient(1px 1px at 77% 77%, rgba(180,200,255,0.8), transparent),
+      radial-gradient(1px 1px at 82% 93%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1px 1px at 86% 15%, rgba(255,255,255,0.85), transparent),
+      radial-gradient(2px 2px at 91% 33%, #fff, transparent),
+      radial-gradient(1px 1px at 95% 51%, rgba(255,255,255,0.75), transparent),
+      radial-gradient(1px 1px at 98% 69%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 6% 88%, rgba(255,255,255,0.85), transparent),
+      radial-gradient(1px 1px at 11% 3%, rgba(255,255,255,0.7), transparent);
+    animation: twinkle 4s ease-in-out infinite alternate;
+  }
+  .stars2 {
+    background-image:
+      radial-gradient(0.5px 0.5px at 4% 18%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(0.5px 0.5px at 9% 36%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(0.5px 0.5px at 16% 54%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 21% 71%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(0.5px 0.5px at 26% 87%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(0.5px 0.5px at 31% 6%, rgba(200,220,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 36% 23%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(0.5px 0.5px at 41% 39%, rgba(255,255,255,0.65), transparent),
+      radial-gradient(0.5px 0.5px at 46% 57%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(0.5px 0.5px at 51% 73%, rgba(220,210,255,0.6), transparent),
+      radial-gradient(0.5px 0.5px at 56% 91%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(0.5px 0.5px at 61% 14%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 66% 31%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(0.5px 0.5px at 71% 48%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(0.5px 0.5px at 76% 65%, rgba(180,200,255,0.65), transparent),
+      radial-gradient(0.5px 0.5px at 81% 82%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(0.5px 0.5px at 86% 99%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(0.5px 0.5px at 91% 7%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 96% 26%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(0.5px 0.5px at 2% 45%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(0.5px 0.5px at 7% 63%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(0.5px 0.5px at 13% 81%, rgba(255,255,255,0.65), transparent),
+      radial-gradient(0.5px 0.5px at 18% 99%, rgba(255,255,255,0.5), transparent);
+    animation: twinkle 7s ease-in-out infinite alternate;
+  }
+  .stars3 {
+    background-image:
+      radial-gradient(1px 1px at 2% 4%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(0.5px 0.5px at 5% 11%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 9% 19%, rgba(200,220,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 12% 27%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.5px 1.5px at 16% 34%, #fff, transparent),
+      radial-gradient(0.5px 0.5px at 20% 42%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 23% 49%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 27% 57%, rgba(220,210,255,0.6), transparent),
+      radial-gradient(1px 1px at 30% 64%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(0.5px 0.5px at 34% 72%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 37% 79%, rgba(255,255,255,0.65), transparent),
+      radial-gradient(0.5px 0.5px at 41% 87%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1.5px 1.5px at 44% 94%, #fff, transparent),
+      radial-gradient(1px 1px at 48% 2%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 51% 9%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 55% 17%, rgba(180,200,255,0.75), transparent),
+      radial-gradient(0.5px 0.5px at 58% 24%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 62% 32%, rgba(255,255,255,0.75), transparent),
+      radial-gradient(0.5px 0.5px at 65% 39%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 69% 47%, #fff, transparent),
+      radial-gradient(0.5px 0.5px at 72% 54%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 76% 62%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 79% 69%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 83% 77%, rgba(220,210,255,0.8), transparent),
+      radial-gradient(0.5px 0.5px at 86% 84%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 90% 92%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 93% 99%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 97% 6%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(0.5px 0.5px at 6% 52%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 14% 68%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 22% 84%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 35% 14%, rgba(200,220,255,0.75), transparent),
+      radial-gradient(0.5px 0.5px at 46% 29%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 57% 44%, rgba(255,255,255,0.65), transparent),
+      radial-gradient(0.5px 0.5px at 68% 59%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 79% 14%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.5px 0.5px at 88% 44%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 95% 74%, rgba(255,255,255,0.8), transparent);
+    animation: twinkle 10s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+  .shooting-star {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px 2px rgba(255,255,255,0.95), 0 0 16px 4px rgba(180,200,255,0.5);
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .shooting-star.s1 { animation: shoot1 40s linear infinite; animation-delay: 5s; }
+  .shooting-star.s2 { animation: shoot2 55s linear infinite; animation-delay: 22s; }
+  .shooting-star.s3 { animation: shoot3 70s linear infinite; animation-delay: 45s; }
+  @keyframes shoot1 {
+    0% { transform: translate(10vw, -5vh); opacity: 0; }
+    1% { opacity: 1; }
+    8% { transform: translate(80vw, 60vh); opacity: 1; }
+    9% { opacity: 0; }
+    100% { transform: translate(80vw, 60vh); opacity: 0; }
+  }
+  @keyframes shoot2 {
+    0% { transform: translate(85vw, -5vh); opacity: 0; }
+    1% { opacity: 1; }
+    7% { transform: translate(15vw, 55vh); opacity: 1; }
+    8% { opacity: 0; }
+    100% { transform: translate(15vw, 55vh); opacity: 0; }
+  }
+  @keyframes shoot3 {
+    0% { transform: translate(-5vw, 20vh); opacity: 0; }
+    1% { opacity: 1; }
+    9% { transform: translate(70vw, 85vh); opacity: 1; }
+    10% { opacity: 0; }
+    100% { transform: translate(70vw, 85vh); opacity: 0; }
+  }
+  header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    font-weight: 800;
+    background: linear-gradient(90deg, #f5a623, #f47a7a, #a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.02em;
+  }
+  .tagline {
+    margin-top: 12px;
+    color: #b8b3e0;
+    font-size: 1.125rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+    width: 100%;
+    max-width: 880px;
+  }
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .card {
+    position: relative;
+    display: block;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #251d6b;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    aspect-ratio: 16 / 9;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(167, 139, 250, 0.35);
+  }
+  .card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .card::after {
+    content: "Play →";
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .card:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  footer {
+    margin-top: auto;
+    padding-top: 48px;
+    color: #6c679a;
+    font-size: 0.875rem;
+  }
+</style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+  <div class="shooting-star s1"></div>
+  <div class="shooting-star s2"></div>
+  <div class="shooting-star s3"></div>
+  <header>
+    <h1>Music Master</h1>
+    <p class="tagline">Pick your quest and sharpen your musical skills</p>
+  </header>
+
+  <main class="grid">
+    <a class="card" href="Note%20Ninja/index.html">
+      <img src="note-ninja.png" alt="Note Ninja" />
+    </a>
+    <a class="card" href="Interval%20Sensei/index.html">
+      <img src="interval-sensei.png" alt="Interval Sensei" />
+    </a>
+    <a class="card" href="Scale%20Guru/index.html">
+      <img src="Scale%20Guru.png" alt="Scale Guru" />
+    </a>
+    <a class="card" href="Chord%20Wizard/index.html">
+      <img src="chord-wizard.png" alt="Chord Wizard" />
+    </a>
+  </main>
+
+  <footer>© 2026 <a href="mailto:ferreira.music@icloud.com" style="color:inherit;text-decoration:none;">ferreira.music@icloud.com</a></footer>
+</body>
+</html>
