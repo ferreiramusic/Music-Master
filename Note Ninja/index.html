@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Note Ninja - Music Note Trainer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --pink: #FF6B9D;
+    --purple: #C084FC;
+    --blue: #60A5FA;
+    --cyan: #22D3EE;
+    --green: #4ADE80;
+    --yellow: #FACC15;
+    --orange: #FB923C;
+    --red: #F87171;
+    --dark: #1E1B4B;
+    --darker: #0F0D2E;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #1E1B4B 0%, #312E81 30%, #4C1D95 60%, #1E1B4B 100%);
+    min-height: 100vh;
+    color: white;
+    overflow-x: hidden;
+  }
+
+  /* Animated background stars */
+  .stars {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    width: 4px; height: 4px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite;
+    opacity: 0;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: var(--op); transform: scale(1); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.8em;
+    text-align: center;
+    margin-bottom: 2px;
+    text-shadow: none;
+  }
+  .title-text {
+    background: linear-gradient(90deg, var(--yellow), var(--orange), var(--pink), var(--purple), var(--cyan));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  .ninja-char {
+    width: 140px;
+    height: 120px;
+    flex-shrink: 0;
+    margin-bottom: -40px;
+  }
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 200% center; }
+  }
+
+  .title-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--yellow), var(--orange), var(--pink), var(--purple), var(--cyan));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s ease-in-out infinite;
+    margin: 0;
+  }
+
+  /* Screens */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  .card-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3em;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Form elements */
+  .input-group { margin-bottom: 18px; }
+  .input-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 1.05em;
+  }
+
+  .name-input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 1.1em;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .name-input::placeholder { color: rgba(255,255,255,0.4); }
+  .name-input:focus { border-color: var(--cyan); }
+  .name-input.error { border-color: var(--red); }
+  .name-error {
+    color: var(--red);
+    font-size: 0.85em;
+    font-weight: 700;
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* Option buttons */
+  .option-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+  }
+  .option-btn {
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .option-btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-2px);
+  }
+  .option-btn.selected {
+    border-color: var(--cyan);
+    background: rgba(34, 211, 238, 0.2);
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.15);
+  }
+  .option-grid-small {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .option-grid-small--row {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .option-grid-small--row .option-btn-small {
+    width: auto;
+    flex: 1 1 auto;
+  }
+  .option-btn-small {
+    padding: 7px 10px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    width: 100%;
+  }
+  .option-btn-small:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+  }
+  .option-btn-small.selected {
+    border-color: var(--cyan);
+    background: rgba(34, 211, 238, 0.2);
+    box-shadow: 0 0 14px rgba(34, 211, 238, 0.15);
+  }
+
+  /* Start button */
+  .start-btn {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    border-radius: 18px;
+    border: none;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 6px 25px rgba(192, 132, 252, 0.3);
+    letter-spacing: 1px;
+    margin: 20px 0;
+    animation: btnFlash 2s ease-in-out infinite;
+  }
+  @keyframes btnFlash {
+    0%, 100% { box-shadow: 0 6px 25px rgba(192, 132, 252, 0.3); }
+    50% { box-shadow: 0 6px 40px rgba(192, 132, 252, 0.8), 0 0 60px rgba(236, 72, 153, 0.4); }
+  }
+  .start-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 35px rgba(192, 132, 252, 0.5);
+    animation: none;
+  }
+  .start-btn:active { transform: translateY(0); animation: none; }
+
+  /* Game screen */
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .stat-box {
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 10px 18px;
+    text-align: center;
+    min-width: 90px;
+  }
+  .stat-label {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 800;
+  }
+  .stat-value {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6em;
+  }
+  .stat-value.score-val { color: var(--yellow); }
+  .stat-value.timer-val { color: var(--cyan); }
+  .stat-value.streak-val { color: var(--green); }
+
+  /* Timer bar */
+  .timer-bar-container {
+    width: 100%;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.1s linear, background 0.5s;
+    background: linear-gradient(90deg, var(--cyan), var(--blue));
+  }
+  .timer-bar.warning { background: linear-gradient(90deg, var(--orange), var(--yellow)); }
+  .timer-bar.danger { background: linear-gradient(90deg, var(--red), var(--orange)); }
+
+  /* Staff display */
+  .staff-container {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 30px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 220px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Staff-container flash overlay */
+  .screen-flash {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 20px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .screen-flash.correct-flash {
+    background: rgba(74, 222, 128, 0.5);
+    animation: screenFlash 1.2s ease-out forwards;
+  }
+  .screen-flash.wrong-flash {
+    background: rgba(248, 113, 113, 0.5);
+    animation: screenFlash 1.2s ease-out forwards;
+  }
+  @keyframes screenFlash {
+    0% { opacity: 1; }
+    40% { opacity: 0.7; }
+    100% { opacity: 0; }
+  }
+
+  /* Confetti / celebration */
+  .confetti-container {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 150;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    top: -20px;
+    animation: confettiFall var(--fall-dur) ease-in forwards;
+    opacity: 0.9;
+  }
+  .confetti-piece.star {
+    font-size: 24px;
+    width: auto; height: auto;
+    background: none !important;
+    line-height: 1;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    80% { opacity: 0.8; }
+    100% { transform: translateY(105vh) rotate(var(--rot)) scale(0.5); opacity: 0; }
+  }
+
+  /* Streak celebration text */
+  .streak-celebration {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 160;
+    font-family: 'Fredoka One', cursive;
+    font-size: 3em;
+    color: var(--yellow);
+    text-shadow: 0 0 30px rgba(250, 204, 21, 0.6), 0 4px 15px rgba(0,0,0,0.3);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .streak-celebration.show {
+    animation: streakPop 1.8s ease-out forwards;
+  }
+  @keyframes streakPop {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    15% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0; }
+  }
+
+  /* Results Modal */
+  .results-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 200;
+    background: rgba(15, 13, 46, 0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s;
+  }
+  .results-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .results-modal {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 24px;
+    padding: 36px 32px 28px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.35s;
+    opacity: 0;
+  }
+  .results-backdrop.show .results-modal {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  .results-emoji {
+    font-size: 3em;
+    margin-bottom: 6px;
+  }
+  .results-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.2em;
+    color: var(--yellow);
+    margin-bottom: 6px;
+  }
+  .results-encouragement {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.25em;
+    margin-bottom: 20px;
+  }
+  .results-stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .results-stat {
+    background: rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 14px 20px;
+    min-width: 90px;
+  }
+  .results-stat-label {
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .results-stat-value {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2em;
+    line-height: 1;
+  }
+  .results-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .results-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: none;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1em;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .results-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+  .results-btn-play {
+    background: var(--purple);
+    color: white;
+  }
+  .results-btn-menu {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* Score display on menu */
+  .menu-scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .menu-score-box {
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+  }
+  .menu-score-label {
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .menu-score-value {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2em;
+  }
+  .menu-score-sub {
+    font-size: 0.85em;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+  }
+
+
+  /* Game control buttons */
+  .game-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 5px;
+  }
+  .game-ctrl-btn {
+    padding: 8px 24px;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .game-ctrl-btn:hover {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  /* Answer buttons */
+  .answer-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  .answer-btn {
+    padding: 16px 8px;
+    border-radius: 16px;
+    border: 3px solid transparent;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .answer-btn:nth-child(1) { background: var(--red); }
+  .answer-btn:nth-child(2) { background: var(--orange); }
+  .answer-btn:nth-child(3) { background: var(--yellow); color: #92400E; }
+  .answer-btn:nth-child(4) { background: var(--green); }
+  .answer-btn:nth-child(5) { background: var(--cyan); }
+  .answer-btn:nth-child(6) { background: var(--blue); }
+  .answer-btn:nth-child(7) { background: var(--purple); }
+
+  .answer-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  }
+  .answer-btn:active { transform: translateY(0); }
+  .answer-btn.correct-pop {
+    animation: popCorrect 0.4s ease-out;
+    border-color: white;
+  }
+  .answer-btn.wrong-shake {
+    animation: shakeWrong 0.4s ease-out;
+    opacity: 0.5;
+  }
+  @keyframes popCorrect {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shakeWrong {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  /* Clef label badge */
+  .clef-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .clef-badge.treble { background: rgba(96,165,250,0.2); color: var(--blue); }
+  .clef-badge.bass { background: rgba(251,146,60,0.2); color: var(--orange); }
+
+
+  .correct-note-display {
+    text-align: center;
+    font-size: 1em;
+    color: rgba(255,255,255,0.5);
+    margin-top: -10px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    min-height: 1.4em;
+  }
+
+  /* Slide toggle */
+  .slide-toggle {
+    position: relative;
+    width: 100%;
+  }
+  .slide-toggle input { display: none; }
+  .slide-toggle-track {
+    display: flex;
+    position: relative;
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 4px;
+    cursor: pointer;
+  }
+  .slide-toggle-option {
+    flex: 1;
+    text-align: center;
+    padding: 14px 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1em;
+    color: rgba(255,255,255,0.5);
+    position: relative;
+    z-index: 2;
+    transition: color 0.3s;
+    user-select: none;
+  }
+  .slide-toggle-option.active {
+    color: white;
+  }
+  .slide-toggle-thumb {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    border-radius: 12px;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.35s;
+    z-index: 1;
+    box-shadow: 0 4px 15px rgba(192, 132, 252, 0.3);
+  }
+  .slide-toggle input:checked ~ .slide-toggle-track .slide-toggle-thumb {
+    transform: translateX(100%);
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+  }
+
+  /* Piano keyboard */
+  #piano-game-screen {
+    background: linear-gradient(135deg, rgba(6,78,59,0.3), rgba(4,120,87,0.2));
+    border-radius: 24px;
+    padding: 20px;
+    border: 2px solid rgba(52,211,153,0.15);
+  }
+  .piano-container {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    min-height: 220px;
+  }
+  .piano-keyboard {
+    display: flex;
+    position: relative;
+    height: 160px;
+    margin: 0 auto;
+    max-width: 100%;
+    justify-content: center;
+  }
+  .piano-key {
+    position: relative;
+    border: 1px solid #999;
+    border-radius: 0 0 6px 6px;
+    cursor: default;
+    transition: background 0.15s;
+  }
+  .piano-key.white {
+    width: 36px;
+    height: 150px;
+    background: #fff;
+    z-index: 1;
+    margin: 0 1px;
+  }
+  .piano-key.black {
+    width: 24px;
+    height: 95px;
+    background: #222;
+    z-index: 2;
+    margin: 0 -12px;
+    border-color: #000;
+    border-radius: 0 0 4px 4px;
+  }
+  .piano-key.highlighted {
+    background: var(--cyan) !important;
+    box-shadow: 0 0 15px rgba(34,211,238,0.6);
+  }
+  .piano-key.black.highlighted {
+    background: var(--blue) !important;
+    box-shadow: 0 0 15px rgba(96,165,250,0.6);
+  }
+  .piano-key .key-label {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7em;
+    font-weight: 700;
+    color: #999;
+    pointer-events: none;
+  }
+  .piano-key.black .key-label {
+    color: #aaa;
+    bottom: 5px;
+    font-size: 0.6em;
+  }
+  .piano-key.highlighted .key-label {
+    color: white;
+    font-weight: 800;
+  }
+
+  /* Natural notes aligned to 14-col grid for Level 2 */
+  .answer-grid-aligned {
+    grid-template-columns: repeat(14, 1fr) !important;
+  }
+  .answer-grid-aligned .answer-btn {
+    grid-column: span 2;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+  }
+
+  /* Sharps/flats answer grid - positioned between natural notes */
+  .piano-keys-grid {
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    gap: 8px;
+    margin-top: -4px;
+    margin-bottom: 15px;
+  }
+  .sharp-btn {
+    font-size: 1.1em !important;
+    border-color: rgba(255,255,255,0.3) !important;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px !important;
+  }
+  .sharp-btn:nth-child(1) { background: #8b1a1a !important; color: white !important; }
+  .sharp-btn:nth-child(2) { background: #8b5e1a !important; color: white !important; }
+  .sharp-btn:nth-child(3) { background: #1a6b3c !important; color: white !important; }
+  .sharp-btn:nth-child(4) { background: #1a4a8b !important; color: white !important; }
+  .sharp-btn:nth-child(5) { background: #5a1a8b !important; color: white !important; }
+
+  /* Clickable piano keys for Level 3 */
+  .piano-key.clickable {
+    cursor: pointer;
+  }
+  .piano-key.clickable:hover {
+    background: #e8e8e8;
+  }
+  .piano-key.black.clickable:hover {
+    background: #444;
+  }
+  .piano-key.correct-key {
+    background: var(--green) !important;
+    transition: background 0.15s;
+  }
+  .piano-key.wrong-key {
+    background: var(--red) !important;
+    transition: background 0.15s;
+  }
+
+  /* Responsive - Tablet */
+  @media (max-width: 700px) {
+    .container { padding: 15px; }
+    h1 { font-size: 2.4em; }
+    .stat-box { min-width: 75px; padding: 8px 12px; }
+    .stat-value { font-size: 1.3em; }
+    .staff-container { padding: 20px 10px; min-height: 180px; }
+    .staff-container svg { width: 100%; height: auto; }
+    .piano-container { padding: 15px; min-height: 180px; }
+    .piano-keyboard { height: 140px; }
+    .piano-key.white { width: 30px; height: 130px; }
+    .piano-key.black { width: 20px; height: 82px; margin: 0 -10px; }
+    .answer-btn { font-size: 1.2em; padding: 14px 6px; }
+    .sharp-btn { font-size: 0.95em !important; }
+  }
+
+  /* Responsive - Mobile */
+  @media (max-width: 500px) {
+    .container { padding: 10px; }
+    h1 { font-size: 1.8em; }
+    .subtitle { font-size: 0.9em; }
+    .card { padding: 18px 14px; margin-bottom: 14px; }
+    .card-title { font-size: 1.1em; }
+    .option-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .option-btn { font-size: 0.85em; padding: 10px 8px; }
+    .slide-toggle-option { padding: 10px 6px; font-size: 0.95em; }
+    .start-btn { font-size: 1.2em; padding: 14px; margin: 14px 0; }
+    .game-header { justify-content: center; }
+    .stat-box { min-width: 65px; padding: 6px 10px; }
+    .stat-label { font-size: 0.65em; }
+    .stat-value { font-size: 1.1em; }
+    .timer-bar-container { height: 8px; margin-bottom: 12px; }
+    .staff-container { padding: 15px 8px; min-height: 150px; border-radius: 14px; }
+    .staff-container svg { width: 100%; height: auto; }
+    .piano-container { padding: 10px; min-height: 150px; border-radius: 14px; }
+    .piano-keyboard { height: 110px; }
+    .piano-key.white { width: 22px; height: 100px; }
+    .piano-key.black { width: 16px; height: 65px; margin: 0 -8px; }
+    .answer-btn { font-size: 1em; padding: 10px 4px; border-radius: 12px; }
+    .answer-grid { gap: 6px; margin-bottom: 10px; }
+    .answer-grid-aligned .answer-btn { font-size: 0.9em; }
+    .piano-keys-grid { gap: 6px; margin-bottom: 10px; }
+    .sharp-btn { font-size: 0.75em !important; padding: 6px 2px !important; }
+    .results-stats { grid-template-columns: repeat(3, 1fr); }
+    .game-controls { gap: 8px; }
+    .game-ctrl-btn { font-size: 0.9em; padding: 10px 16px; }
+    #piano-game-screen { padding: 14px; border-radius: 18px; }
+    .menu-scores { gap: 8px; }
+    .menu-score-box { padding: 14px; }
+    .menu-score-value { font-size: 2em; }
+  }
+
+  /* Responsive - Small mobile */
+  @media (max-width: 380px) {
+    h1 { font-size: 1.5em; }
+    .container { padding: 8px; }
+    .card { padding: 14px 10px; }
+    .piano-keyboard { height: 90px; }
+    .piano-key.white { width: 18px; height: 85px; }
+    .piano-key.black { width: 13px; height: 55px; margin: 0 -6.5px; }
+    .answer-btn { font-size: 0.85em; padding: 8px 2px; }
+    .sharp-btn { font-size: 0.65em !important; }
+    .option-grid { grid-template-columns: 1fr 1fr; }
+    .stat-box { min-width: 55px; padding: 5px 6px; }
+  }
+</style>
+</head>
+<body>
+<a href="../index.html" title="Return to game menu" style="position:fixed;top:16px;right:16px;z-index:99999;display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(255,255,255,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);border-radius:999px;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:600;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:background 0.2s ease,transform 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.22)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='rgba(255,255,255,0.12)';this.style.transform='translateY(0)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="6" ry="6"/></svg>Return to game menu</a>
+
+<div class="stars" id="stars"></div>
+
+<div class="container">
+  <div class="title-header">
+    <svg class="ninja-char" viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="invert">
+          <feComponentTransfer>
+            <feFuncR type="linear" slope="-1" intercept="1"/>
+            <feFuncG type="linear" slope="-1" intercept="1"/>
+            <feFuncB type="linear" slope="-1" intercept="1"/>
+          </feComponentTransfer>
+        </filter>
+        <mask id="ninja-mask">
+          <image href="data:image/png;base64,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" width="140" height="120" filter="url(#invert)" preserveAspectRatio="xMidYMid meet"/>
+        </mask>
+        <linearGradient id="ninja-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="var(--yellow)"/>
+          <stop offset="25%" stop-color="var(--orange)"/>
+          <stop offset="50%" stop-color="var(--pink)"/>
+          <stop offset="75%" stop-color="var(--purple)"/>
+          <stop offset="100%" stop-color="var(--cyan)"/>
+        </linearGradient>
+      </defs>
+      <rect width="140" height="120" fill="url(#ninja-grad)" mask="url(#ninja-mask)"/>
+    </svg>
+    <h1>
+      <span class="title-text">Note Ninja</span>
+    </h1>
+    <p class="subtitle">Become a music master!</p>
+  </div>
+
+  <!-- ============ MENU SCREEN ============ -->
+  <div class="screen active" id="menu-screen">
+    <!-- Game Mode Toggle -->
+    <div class="card">
+      <div class="card-title">Game Mode</div>
+      <div class="slide-toggle" id="slide-toggle">
+        <input type="checkbox" id="game-mode-toggle">
+        <div class="slide-toggle-track">
+          <span class="slide-toggle-option" id="toggle-label-staff">Staff Notes</span>
+          <span class="slide-toggle-option" id="toggle-label-piano">Piano Keys</span>
+          <div class="slide-toggle-thumb"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="staff-mode-options">
+    <div class="card">
+      <div style="margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:8px;">Choose Clef</div>
+        <div class="option-grid-small option-grid-small--row" id="clef-options">
+          <button class="option-btn-small selected" data-value="treble">Treble</button>
+          <button class="option-btn-small" data-value="bass">Bass</button>
+          <button class="option-btn-small" data-value="both">Both</button>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:8px;">Difficulty</div>
+        <div class="option-grid-small option-grid-small--row" id="difficulty-options">
+          <button class="option-btn-small selected" data-value="lines">Lines</button>
+          <button class="option-btn-small" data-value="spaces">Spaces</button>
+          <button class="option-btn-small" data-value="lines-spaces">Lines &amp; Spaces</button>
+          <button class="option-btn-small" data-value="ledger">Ledger Lines</button>
+        </div>
+      </div>
+    </div>
+    </div><!-- end staff-mode-options -->
+
+    <div id="piano-mode-options" style="display:none;">
+    <div class="card">
+      <div class="card-title">Difficulty</div>
+      <div class="option-grid" id="piano-difficulty-options">
+        <button class="option-btn selected" data-value="level1">Natural Notes</button>
+        <button class="option-btn" data-value="level2">Sharps &amp; Flats</button>
+        <button class="option-btn" data-value="level3">Staff to Keys</button>
+      </div>
+    </div>
+    </div><!-- end piano-mode-options -->
+
+    <button class="start-btn" id="start-btn">START GAME!</button>
+
+    <div class="menu-scores" id="menu-scores" style="display:none;">
+      <div class="menu-score-box">
+        <div class="menu-score-label">Last Score</div>
+        <div class="menu-score-value" id="menu-last-score" style="color:var(--cyan);">-</div>
+        <div class="menu-score-sub" id="menu-last-accuracy"></div>
+      </div>
+      <div class="menu-score-box">
+        <div class="menu-score-label">Highest Score</div>
+        <div class="menu-score-value" id="menu-high-score" style="color:var(--yellow);">-</div>
+        <div class="menu-score-sub" id="menu-high-accuracy"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <div class="screen" id="game-screen">
+    <div class="game-header">
+      <div class="stat-box">
+        <div class="stat-label">Score</div>
+        <div class="stat-value score-val" id="score-display">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Time</div>
+        <div class="stat-value timer-val" id="timer-display">60</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Streak</div>
+        <div class="stat-value streak-val" id="streak-display">0</div>
+      </div>
+    </div>
+
+    <div class="timer-bar-container">
+      <div class="timer-bar" id="timer-bar"></div>
+    </div>
+
+    <div class="staff-container" id="staff-container">
+      <svg id="staff-svg" width="100%" height="auto" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="screen-flash" id="screen-flash"></div>
+    </div>
+
+    <div class="correct-note-display" id="correct-note-display"></div>
+
+    <div class="answer-grid" id="answer-grid">
+      <button class="answer-btn" data-note="C">C</button>
+      <button class="answer-btn" data-note="D">D</button>
+      <button class="answer-btn" data-note="E">E</button>
+      <button class="answer-btn" data-note="F">F</button>
+      <button class="answer-btn" data-note="G">G</button>
+      <button class="answer-btn" data-note="A">A</button>
+      <button class="answer-btn" data-note="B">B</button>
+    </div>
+
+    <div class="game-controls">
+      <button class="game-ctrl-btn" id="restart-btn">Restart</button>
+      <button class="game-ctrl-btn" id="exit-btn">Exit</button>
+    </div>
+  </div>
+
+  <!-- ============ PIANO GAME SCREEN ============ -->
+  <div class="screen" id="piano-game-screen">
+    <div class="game-header">
+      <div class="stat-box">
+        <div class="stat-label">Score</div>
+        <div class="stat-value score-val" id="piano-score-display">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Time</div>
+        <div class="stat-value timer-val" id="piano-timer-display">60</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Streak</div>
+        <div class="stat-value streak-val" id="piano-streak-display">0</div>
+      </div>
+    </div>
+
+    <div class="timer-bar-container">
+      <div class="timer-bar" id="piano-timer-bar"></div>
+    </div>
+
+    <!-- Staff display for Level 3 -->
+    <div class="staff-container" id="piano-staff-container" style="display:none;">
+      <svg id="piano-staff-svg" width="100%" height="auto" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="screen-flash" id="piano-staff-flash"></div>
+    </div>
+
+    <!-- Piano keyboard for Level 1, 2, and 3 -->
+    <div class="piano-container" id="piano-container">
+      <div class="piano-keyboard" id="piano-keyboard"></div>
+      <div class="screen-flash" id="piano-screen-flash"></div>
+    </div>
+
+    <div class="correct-note-display" id="piano-correct-note-display"></div>
+
+    <!-- Natural notes (Level 1) -->
+    <!-- Natural notes (Level 1) -->
+    <div class="answer-grid" id="piano-answer-grid">
+      <button class="answer-btn" data-note="C">C</button>
+      <button class="answer-btn" data-note="D">D</button>
+      <button class="answer-btn" data-note="E">E</button>
+      <button class="answer-btn" data-note="F">F</button>
+      <button class="answer-btn" data-note="G">G</button>
+      <button class="answer-btn" data-note="A">A</button>
+      <button class="answer-btn" data-note="B">B</button>
+    </div>
+
+    <!-- Sharps & flats row (Level 2) - positioned between naturals -->
+    <div class="piano-keys-grid" id="piano-sharps-grid" style="display:none;">
+      <button class="answer-btn sharp-btn" data-note="C#" style="grid-column: 2 / span 2;">C#/Db</button>
+      <button class="answer-btn sharp-btn" data-note="D#" style="grid-column: 4 / span 2;">D#/Eb</button>
+      <button class="answer-btn sharp-btn" data-note="F#" style="grid-column: 8 / span 2;">F#/Gb</button>
+      <button class="answer-btn sharp-btn" data-note="G#" style="grid-column: 10 / span 2;">G#/Ab</button>
+      <button class="answer-btn sharp-btn" data-note="A#" style="grid-column: 12 / span 2;">A#/Bb</button>
+    </div>
+
+    <div class="game-controls">
+      <button class="game-ctrl-btn" id="piano-restart-btn">Restart</button>
+      <button class="game-ctrl-btn" id="piano-exit-btn">Exit</button>
+    </div>
+  </div>
+
+  <!-- ============ GAME OVER OVERLAY ============ -->
+  <!-- Confetti & streak celebration -->
+  <div class="confetti-container" id="confetti-container"></div>
+  <div class="streak-celebration" id="streak-celebration"></div>
+
+  <!-- Results Modal -->
+  <div class="results-backdrop" id="results-backdrop">
+    <div class="results-modal">
+      <div class="results-emoji" id="results-emoji"></div>
+      <div class="results-title" id="results-title"></div>
+      <div class="results-encouragement" id="results-encouragement"></div>
+      <div class="results-stats-row">
+        <div class="results-stat">
+          <div class="results-stat-label">Score</div>
+          <div class="results-stat-value" id="results-score" style="color:var(--yellow)"></div>
+        </div>
+        <div class="results-stat">
+          <div class="results-stat-label">Accuracy</div>
+          <div class="results-stat-value" id="results-accuracy" style="color:var(--cyan)"></div>
+        </div>
+        <div class="results-stat">
+          <div class="results-stat-label">Best Streak</div>
+          <div class="results-stat-value" id="results-streak" style="color:var(--green)"></div>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="results-btn results-btn-play" onclick="closeResultsAndRestart()">Play Again</button>
+        <button class="results-btn results-btn-menu" onclick="closeResultsAndMenu()">Menu</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== NOTE DATA ====================
+const TREBLE_NOTES = {
+  lines: [
+    { name: 'E', y: 140, label: 'E4' },
+    { name: 'G', y: 120, label: 'G4' },
+    { name: 'B', y: 100, label: 'B4' },
+    { name: 'D', y: 80,  label: 'D5' },
+    { name: 'F', y: 60,  label: 'F5' },
+  ],
+  spaces: [
+    { name: 'F', y: 130, label: 'F4' },
+    { name: 'A', y: 110, label: 'A4' },
+    { name: 'C', y: 90,  label: 'C5' },
+    { name: 'E', y: 70,  label: 'E5' },
+  ],
+  ledger: [
+    { name: 'C', y: 160, label: 'C4', ledgerY: [160] },
+    { name: 'D', y: 150, label: 'D4' },
+    { name: 'B', y: 170, label: 'B3', ledgerY: [160] },
+    { name: 'A', y: 180, label: 'A3', ledgerY: [160, 180] },
+    { name: 'G', y: 50,  label: 'G5' },
+    { name: 'A', y: 40,  label: 'A5', ledgerY: [40] },
+    { name: 'B', y: 30,  label: 'B5', ledgerY: [40] },
+    { name: 'C', y: 20,  label: 'C6', ledgerY: [40, 20] },
+  ]
+};
+
+const BASS_NOTES = {
+  lines: [
+    { name: 'G', y: 140, label: 'G2' },
+    { name: 'B', y: 120, label: 'B2' },
+    { name: 'D', y: 100, label: 'D3' },
+    { name: 'F', y: 80,  label: 'F3' },
+    { name: 'A', y: 60,  label: 'A3' },
+  ],
+  spaces: [
+    { name: 'A', y: 130, label: 'A2' },
+    { name: 'C', y: 110, label: 'C3' },
+    { name: 'E', y: 90,  label: 'E3' },
+    { name: 'G', y: 70,  label: 'G3' },
+  ],
+  ledger: [
+    { name: 'E', y: 160, label: 'E2', ledgerY: [160] },
+    { name: 'F', y: 150, label: 'F2' },
+    { name: 'D', y: 170, label: 'D2', ledgerY: [160] },
+    { name: 'C', y: 180, label: 'C2', ledgerY: [160, 180] },
+    { name: 'B', y: 50,  label: 'B3' },
+    { name: 'C', y: 40,  label: 'C4', ledgerY: [40] },
+    { name: 'D', y: 30,  label: 'D4', ledgerY: [40] },
+    { name: 'E', y: 20,  label: 'E4', ledgerY: [40, 20] },
+  ]
+};
+
+// ==================== GAME STATE ====================
+let state = {
+  clef: 'treble',
+  difficulty: 'lines',
+  score: 0,
+  total: 0,
+  streak: 0,
+  bestStreak: 0,
+  currentNote: null,
+  currentClef: 'treble',
+  timeLeft: 60,
+  timerInterval: null,
+  isPlaying: false,
+  gameMode: 'staff',
+  pianoCurrentNote: null,
+  pianoLevel: 'level1',
+};
+
+// ==================== SOUND EFFECTS ====================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  // Ensure audio context is running (needed after user gesture)
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const now = audioCtx.currentTime;
+
+  if (type === 'correct') {
+    // Happy rising two-tone chime
+    [523.25, 659.25].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.25, now + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.1);
+      osc.stop(now + i * 0.1 + 0.3);
+    });
+  } else if (type === 'wrong') {
+    // Low buzz tone
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 180;
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.35);
+  } else if (type === 'streak') {
+    // Ascending fanfare arpeggio
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.2, now + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.4);
+    });
+  } else if (type === 'gameover') {
+    // Descending three-note
+    [440, 349.23, 261.63].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.2, now + i * 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.25 + 0.5);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.25);
+      osc.stop(now + i * 0.25 + 0.5);
+    });
+  } else if (type === 'startup') {
+    // Quick ascending power-up sweep
+    [392, 523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.18, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.25);
+    });
+  }
+}
+
+// ==================== CONFETTI ====================
+function launchConfetti() {
+  const container = document.getElementById('confetti-container');
+  const colors = ['#FF6B9D', '#C084FC', '#60A5FA', '#22D3EE', '#4ADE80', '#FACC15', '#FB923C', '#F87171'];
+  const stars = ['\u2B50', '\u2728', '\u23F0', '\u2B50'];
+  const pieces = 60;
+
+  for (let i = 0; i < pieces; i++) {
+    const el = document.createElement('div');
+    const isStar = i < 15;
+    el.className = 'confetti-piece' + (isStar ? ' star' : '');
+
+    if (isStar) {
+      el.textContent = stars[Math.floor(Math.random() * stars.length)];
+    } else {
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      el.style.width = (6 + Math.random() * 10) + 'px';
+      el.style.height = (6 + Math.random() * 10) + 'px';
+    }
+
+    el.style.left = Math.random() * 100 + '%';
+    el.style.setProperty('--fall-dur', (1.5 + Math.random() * 2) + 's');
+    el.style.setProperty('--rot', (360 + Math.random() * 720) + 'deg');
+    el.style.animationDelay = Math.random() * 0.6 + 's';
+
+    container.appendChild(el);
+  }
+
+  // Clean up after animation
+  setTimeout(() => { container.innerHTML = ''; }, 4000);
+}
+
+function showStreakCelebration(streak) {
+  const el = document.getElementById('streak-celebration');
+  el.textContent = `${streak} IN A ROW!`;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ==================== DOM REFS ====================
+const $ = id => document.getElementById(id);
+const screens = {
+  menu: $('menu-screen'),
+  game: $('game-screen'),
+  piano: $('piano-game-screen'),
+};
+
+// ==================== INIT ====================
+function init() {
+  createStars();
+  setupOptionButtons();
+  $('start-btn').addEventListener('click', startGame);
+  $('restart-btn').addEventListener('click', startGame);
+  $('exit-btn').addEventListener('click', exitGame);
+  $('piano-restart-btn').addEventListener('click', startPianoGame);
+  $('piano-exit-btn').addEventListener('click', exitPianoGame);
+  updateMenuScores();
+
+  // Staff game answer buttons
+  document.querySelectorAll('#answer-grid .answer-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleAnswer(btn));
+  });
+
+  // Piano game answer buttons (natural + sharps)
+  document.querySelectorAll('#piano-answer-grid .answer-btn, #piano-sharps-grid .answer-btn').forEach(btn => {
+    btn.addEventListener('click', () => handlePianoAnswer(btn));
+  });
+
+  // Keyboard support
+  document.addEventListener('keydown', e => {
+    if (!state.isPlaying) return;
+    const map = { 'c': 'C', 'd': 'D', 'e': 'E', 'f': 'F', 'g': 'G', 'a': 'A', 'b': 'B' };
+    const note = map[e.key.toLowerCase()];
+    if (note) {
+      if (state.gameMode === 'piano') {
+        const btn = document.querySelector('#piano-answer-grid .answer-btn[data-note="' + note + '"]');
+        if (btn) handlePianoAnswer(btn);
+      } else {
+        const btn = document.querySelector('#answer-grid .answer-btn[data-note="' + note + '"]');
+        if (btn) handleAnswer(btn);
+      }
+    }
+  });
+
+  // Game mode toggle
+  const toggle = $('game-mode-toggle');
+  const staffLabel = $('toggle-label-staff');
+  const pianoLabel = $('toggle-label-piano');
+  const staffOptions = $('staff-mode-options');
+  const slideTrack = document.querySelector('.slide-toggle-track');
+  staffLabel.classList.add('active');
+
+  slideTrack.addEventListener('click', () => {
+    toggle.checked = !toggle.checked;
+    toggle.dispatchEvent(new Event('change'));
+  });
+
+  const pianoOptions = $('piano-mode-options');
+  toggle.addEventListener('change', () => {
+    if (toggle.checked) {
+      staffLabel.classList.remove('active');
+      pianoLabel.classList.add('active');
+      staffOptions.style.display = 'none';
+      pianoOptions.style.display = 'block';
+    } else {
+      staffLabel.classList.add('active');
+      pianoLabel.classList.remove('active');
+      staffOptions.style.display = 'block';
+      pianoOptions.style.display = 'none';
+    }
+  });
+
+  // Build piano keyboard
+  buildPianoKeyboard();
+}
+
+function createStars() {
+  const container = $('stars');
+  for (let i = 0; i < 60; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
+    star.style.setProperty('--op', (0.3 + Math.random() * 0.7));
+    star.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(star);
+  }
+}
+
+function setupOptionButtons() {
+  document.querySelectorAll('.option-grid, .option-grid-small').forEach(grid => {
+    grid.querySelectorAll('.option-btn, .option-btn-small').forEach(btn => {
+      btn.addEventListener('click', () => {
+        grid.querySelectorAll('.option-btn, .option-btn-small').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+    });
+  });
+}
+
+// ==================== SCREENS ====================
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+// ==================== DRAWING ====================
+function drawStaff(svg, clef, note) {
+  const staffTop = 60;
+  const lineSpacing = 20;
+  let svgContent = '';
+
+  // Staff lines
+  for (let i = 0; i < 5; i++) {
+    const y = staffTop + i * lineSpacing;
+    svgContent += `<line x1="80" y1="${y}" x2="360" y2="${y}" stroke="#333" stroke-width="1.5"/>`;
+  }
+
+  // Draw clef
+  if (clef === 'treble') {
+    svgContent += drawTrebleClef(90, staffTop, lineSpacing);
+  } else {
+    svgContent += drawBassClef(90, staffTop, lineSpacing);
+  }
+
+  // Draw note
+  if (note) {
+    const noteX = 230;
+    const noteY = note.y;
+
+    // Ledger lines from note data
+    if (note.ledgerY) {
+      note.ledgerY.forEach(ly => {
+        svgContent += `<line x1="${noteX - 20}" y1="${ly}" x2="${noteX + 20}" y2="${ly}" stroke="#333" stroke-width="1.5"/>`;
+      });
+    }
+
+    // Note head only (whole note style - filled oval)
+    svgContent += `<ellipse cx="${noteX}" cy="${noteY}" rx="11" ry="8" fill="#1a1a2e" transform="rotate(-15, ${noteX}, ${noteY})"/>`;
+  }
+
+  svg.innerHTML = svgContent;
+}
+
+function drawTrebleClef(x, staffTop, sp) {
+  // Use the Unicode treble clef character rendered as SVG text
+  const cx = x + 6;
+  const cy = staffTop + sp * 3.2;
+  return `<text x="${cx}" y="${cy}" font-size="78" font-family="Bravura, Noto Music, Segoe UI Symbol, serif" fill="#1a1a2e">&#119070;</text>`;
+}
+
+// Generate bass clef bitmap at startup
+const bassClefDataUrl = (() => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 200;
+  canvas.height = 240;
+  const ctx = canvas.getContext('2d');
+  ctx.font = '200px serif';
+  ctx.fillStyle = '#1a1a2e';
+  ctx.textBaseline = 'top';
+  ctx.fillText('\uD834\uDD22', 10, 10);
+  // Find bounding box and crop
+  const imageData = ctx.getImageData(0, 0, 200, 240);
+  let minX = 200, minY = 240, maxX = 0, maxY = 0;
+  for (let y = 0; y < 240; y++) {
+    for (let x = 0; x < 200; x++) {
+      if (imageData.data[(y * 200 + x) * 4 + 3] > 10) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  const w = maxX - minX + 1, h = maxY - minY + 1;
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width = w;
+  cropCanvas.height = h;
+  cropCanvas.getContext('2d').drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
+  return { url: cropCanvas.toDataURL('image/png'), w, h, dotRow: 26 };
+})();
+
+function drawBassClef(x, staffTop, sp) {
+  // Bitmap bass clef from system font, scaled so top of curl = top staff line
+  // and F-line dot (at dotRow in the bitmap) aligns with staffTop + sp
+  const fy = staffTop + sp; // F line y position
+  const staffHeight = sp * 4; // total height of the 5-line staff
+  const scale = staffHeight / bassClefDataUrl.h; // fit entire clef within staff
+  const imgW = bassClefDataUrl.w * scale;
+  const imgH = staffHeight;
+  const imgX = x - 5;
+  const imgY = staffTop; // top of clef at top staff line
+  return `<image href="${bassClefDataUrl.url}" x="${imgX}" y="${imgY}" width="${imgW}" height="${imgH}"/>`;
+}
+
+// ==================== GAME LOGIC ====================
+function getAvailableNotes() {
+  const clefs = state.clef === 'both' ? ['treble', 'bass'] : [state.clef];
+  const notes = [];
+
+  clefs.forEach(c => {
+    const noteSet = c === 'treble' ? TREBLE_NOTES : BASS_NOTES;
+    const diff = state.difficulty;
+
+    if (diff === 'lines' || diff === 'lines-spaces' || diff === 'ledger') {
+      noteSet.lines.forEach(n => notes.push({ ...n, clef: c }));
+    }
+    if (diff === 'spaces' || diff === 'lines-spaces' || diff === 'ledger') {
+      noteSet.spaces.forEach(n => notes.push({ ...n, clef: c }));
+    }
+    if (diff === 'ledger') {
+      noteSet.ledger.forEach(n => notes.push({ ...n, clef: c }));
+    }
+  });
+
+  return notes;
+}
+
+function pickRandomNote() {
+  const available = getAvailableNotes();
+  let note;
+  // Avoid same note twice in a row
+  do {
+    note = available[Math.floor(Math.random() * available.length)];
+  } while (state.currentNote && note.label === state.currentNote.label && available.length > 1);
+  return note;
+}
+
+function showNextNote() {
+  state.currentNote = pickRandomNote();
+  state.currentClef = state.currentNote.clef;
+  $('correct-note-display').textContent = '';
+  drawStaff($('staff-svg'), state.currentClef, state.currentNote);
+}
+
+function handleAnswer(btn) {
+  if (!state.isPlaying) return;
+
+  const chosen = btn.dataset.note;
+  const correct = state.currentNote.name;
+  state.total++;
+
+  // Remove previous animation classes
+  document.querySelectorAll('.answer-btn').forEach(b => {
+    b.classList.remove('correct-pop', 'wrong-shake');
+  });
+
+  // Full-screen flash
+  const flash = $('screen-flash');
+  flash.classList.remove('correct-flash', 'wrong-flash');
+  void flash.offsetWidth; // force reflow
+
+  if (chosen === correct) {
+    state.score++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+    btn.classList.add('correct-pop');
+    flash.classList.add('correct-flash');
+    playSound('correct');
+
+    // Celebrate every 10 in a row
+    if (state.streak > 0 && state.streak % 10 === 0) {
+      launchConfetti();
+      showStreakCelebration(state.streak);
+      playSound('streak');
+    }
+  } else {
+    state.streak = 0;
+    btn.classList.add('wrong-shake');
+    flash.classList.add('wrong-flash');
+    playSound('wrong');
+    $('correct-note-display').textContent = `The answer was ${correct}`;
+  }
+
+  updateGameUI();
+
+  // Brief pause then next note
+  state.isPlaying = false;
+  setTimeout(() => {
+    if (state.timeLeft > 0) {
+      state.isPlaying = true;
+      showNextNote();
+    }
+  }, chosen === correct ? 300 : 800);
+}
+
+function updateGameUI() {
+  $('score-display').textContent = state.score;
+  $('streak-display').textContent = state.streak;
+}
+
+function startGame() {
+  // Check if piano mode
+  if ($('game-mode-toggle').checked) {
+    startPianoGame();
+    return;
+  }
+
+  const clefBtn = document.querySelector('#clef-options .option-btn-small.selected, #clef-options .option-btn.selected');
+  state.clef = clefBtn ? clefBtn.dataset.value : 'treble';
+
+  const diffBtn = document.querySelector('#difficulty-options .option-btn-small.selected, #difficulty-options .option-btn.selected');
+  state.difficulty = diffBtn ? diffBtn.dataset.value : 'lines';
+
+  // Reset state
+  state.score = 0;
+  state.total = 0;
+  state.streak = 0;
+  state.bestStreak = 0;
+  state.timeLeft = 60;
+  state.isPlaying = true;
+  state.gameMode = 'staff';
+
+  updateGameUI();
+  $('timer-display').textContent = '60';
+  $('timer-bar').style.width = '100%';
+  $('timer-bar').className = 'timer-bar';
+  $('correct-note-display').textContent = '';
+  $('screen-flash').classList.remove('correct-flash', 'wrong-flash');
+
+  playSound('startup');
+  showScreen('game');
+  showNextNote();
+
+  // Start timer
+  clearInterval(state.timerInterval);
+  const startTime = Date.now();
+  const duration = 60000;
+
+  state.timerInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    state.timeLeft = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+    const pct = Math.max(0, ((duration - elapsed) / duration) * 100);
+
+    $('timer-display').textContent = state.timeLeft;
+    $('timer-bar').style.width = pct + '%';
+
+    // Color changes
+    const bar = $('timer-bar');
+    bar.classList.remove('warning', 'danger');
+    if (pct <= 16) bar.classList.add('danger');
+    else if (pct <= 33) bar.classList.add('warning');
+
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      state.isPlaying = false;
+      setTimeout(showResults, 500);
+    }
+  }, 100);
+}
+
+function exitGame() {
+  clearInterval(state.timerInterval);
+  state.isPlaying = false;
+
+  // Save score if any questions were attempted
+  if (state.total > 0) {
+    const accuracy = Math.round((state.score / state.total) * 100);
+    saveScore(state.score, state.total, accuracy, state.bestStreak, state.clef, state.difficulty);
+  }
+
+  updateMenuScores();
+  showScreen('menu');
+}
+
+// ==================== RESULTS ====================
+function showResults() {
+  const accuracy = state.total > 0 ? Math.round((state.score / state.total) * 100) : 0;
+
+  let emoji, title, encouragement, color;
+  if (accuracy === 100) {
+    emoji = '🏆'; title = 'PERFECT!'; color = 'var(--yellow)';
+    encouragement = 'Flawless! You\'re a true Note Ninja!';
+  } else if (accuracy >= 90) {
+    emoji = '⭐'; title = 'Excellent!'; color = 'var(--green)';
+    encouragement = 'Amazing work — you\'re really mastering those notes!';
+  } else if (accuracy >= 70) {
+    emoji = '🎵'; title = 'Great Job!'; color = 'var(--cyan)';
+    encouragement = 'You\'re getting there — keep up the great practice!';
+  } else if (accuracy >= 50) {
+    emoji = '💪'; title = 'Good Effort!'; color = 'var(--orange)';
+    encouragement = 'Every practice session makes you stronger. Keep going!';
+  } else {
+    emoji = '🎯'; title = 'Keep Going!'; color = 'var(--purple)';
+    encouragement = 'Don\'t give up — every ninja starts as a beginner!';
+  }
+
+  $('results-emoji').textContent = emoji;
+  $('results-title').textContent = title;
+  $('results-title').style.color = color;
+  $('results-encouragement').textContent = encouragement;
+  $('results-encouragement').style.color = color;
+  $('results-score').textContent = state.score;
+  $('results-accuracy').textContent = accuracy + '%';
+  $('results-streak').textContent = state.bestStreak;
+
+  playSound('gameover');
+  $('results-backdrop').classList.add('show');
+
+  if (accuracy >= 90) setTimeout(launchConfetti, 300);
+}
+
+function closeResultsAndRestart() {
+  $('results-backdrop').classList.remove('show');
+  setTimeout(() => {
+    if (state.gameMode === 'piano') startPianoGame();
+    else startGame();
+  }, 300);
+}
+
+function closeResultsAndMenu() {
+  $('results-backdrop').classList.remove('show');
+  updateMenuScores();
+  setTimeout(() => showScreen('menu'), 300);
+}
+
+function updateMenuScores() {
+  const scores = getScores();
+  const menuScoresEl = $('menu-scores');
+
+  if (scores.length === 0) {
+    menuScoresEl.style.display = 'none';
+  } else {
+    menuScoresEl.style.display = 'grid';
+    const lastAccuracy = state.total > 0 ? Math.round((state.score / state.total) * 100) : 0;
+    $('menu-last-score').textContent = state.score;
+    $('menu-last-accuracy').textContent = `${lastAccuracy}% accuracy`;
+    const highest = scores[0];
+    $('menu-high-score').textContent = highest.score;
+    $('menu-high-accuracy').textContent = `${highest.accuracy}% accuracy`;
+  }
+
+}
+
+function getScores() {
+  try {
+    return JSON.parse(localStorage.getItem('noteNinjaScores') || '[]');
+  } catch { return []; }
+}
+
+function saveScore(score, total, accuracy, bestStreak, clef, difficulty) {
+  const scores = getScores();
+  scores.push({ score, total, accuracy, bestStreak, clef, difficulty, date: new Date().toLocaleDateString() });
+  scores.sort((a, b) => b.score - a.score || b.accuracy - a.accuracy);
+  localStorage.setItem('noteNinjaScores', JSON.stringify(scores.slice(0, 50)));
+}
+
+
+// ==================== PIANO GAME ====================
+
+// Two octaves of piano keys: C4 to B5
+const PIANO_KEYS = [
+  { note: 'C', octave: 4, type: 'white' },
+  { note: 'C#', octave: 4, type: 'black' },
+  { note: 'D', octave: 4, type: 'white' },
+  { note: 'D#', octave: 4, type: 'black' },
+  { note: 'E', octave: 4, type: 'white' },
+  { note: 'F', octave: 4, type: 'white' },
+  { note: 'F#', octave: 4, type: 'black' },
+  { note: 'G', octave: 4, type: 'white' },
+  { note: 'G#', octave: 4, type: 'black' },
+  { note: 'A', octave: 4, type: 'white' },
+  { note: 'A#', octave: 4, type: 'black' },
+  { note: 'B', octave: 4, type: 'white' },
+  { note: 'C', octave: 5, type: 'white' },
+  { note: 'C#', octave: 5, type: 'black' },
+  { note: 'D', octave: 5, type: 'white' },
+  { note: 'D#', octave: 5, type: 'black' },
+  { note: 'E', octave: 5, type: 'white' },
+  { note: 'F', octave: 5, type: 'white' },
+  { note: 'F#', octave: 5, type: 'black' },
+  { note: 'G', octave: 5, type: 'white' },
+  { note: 'G#', octave: 5, type: 'black' },
+  { note: 'A', octave: 5, type: 'white' },
+  { note: 'A#', octave: 5, type: 'black' },
+  { note: 'B', octave: 5, type: 'white' },
+];
+
+// Key pools by level
+const PIANO_WHITE_KEYS = PIANO_KEYS.filter(k => k.type === 'white');
+const PIANO_ALL_KEYS = PIANO_KEYS;
+
+// Treble clef notes mapped to piano keys for Level 3
+const TREBLE_TO_PIANO = [
+  { note: 'C', y: 160, label: 'C4', octave: 4, ledgerY: [160] },
+  { note: 'D', y: 150, label: 'D4', octave: 4 },
+  { note: 'E', y: 140, label: 'E4', octave: 4 },
+  { note: 'F', y: 130, label: 'F4', octave: 4 },
+  { note: 'G', y: 120, label: 'G4', octave: 4 },
+  { note: 'A', y: 110, label: 'A4', octave: 4 },
+  { note: 'B', y: 100, label: 'B4', octave: 4 },
+  { note: 'C', y: 90,  label: 'C5', octave: 5 },
+  { note: 'D', y: 80,  label: 'D5', octave: 5 },
+  { note: 'E', y: 70,  label: 'E5', octave: 5 },
+  { note: 'F', y: 60,  label: 'F5', octave: 5 },
+  { note: 'G', y: 50,  label: 'G5', octave: 5 },
+  { note: 'A', y: 40,  label: 'A5', octave: 5, ledgerY: [40] },
+  { note: 'B', y: 30,  label: 'B5', octave: 5, ledgerY: [40] },
+];
+
+function buildPianoKeyboard() {
+  const keyboard = $('piano-keyboard');
+  keyboard.innerHTML = '';
+  PIANO_KEYS.forEach((key, idx) => {
+    const el = document.createElement('div');
+    el.className = 'piano-key ' + key.type;
+    el.dataset.index = idx;
+    el.dataset.note = key.note;
+    el.dataset.octave = key.octave;
+    el.addEventListener('click', () => handlePianoKeyClick(el));
+    keyboard.appendChild(el);
+  });
+}
+
+function getPianoNotePool() {
+  if (state.pianoLevel === 'level2') return PIANO_ALL_KEYS;
+  if (state.pianoLevel === 'level3') return TREBLE_TO_PIANO;
+  return PIANO_WHITE_KEYS;
+}
+
+function pickRandomPianoNote() {
+  const pool = getPianoNotePool();
+  let note;
+  do {
+    note = pool[Math.floor(Math.random() * pool.length)];
+  } while (state.pianoCurrentNote && note.note === state.pianoCurrentNote.note &&
+    (note.octave || 0) === (state.pianoCurrentNote.octave || 0) && pool.length > 1);
+  return note;
+}
+
+function highlightPianoKey(note) {
+  document.querySelectorAll('.piano-key').forEach(k => k.classList.remove('highlighted'));
+  document.querySelectorAll('.piano-key').forEach(k => {
+    if (k.dataset.note === note.note && parseInt(k.dataset.octave) === note.octave) {
+      k.classList.add('highlighted');
+    }
+  });
+}
+
+function showNextPianoNote() {
+  state.pianoCurrentNote = pickRandomPianoNote();
+  $('piano-correct-note-display').textContent = '';
+
+  if (state.pianoLevel === 'level3') {
+    // Draw note on staff, don't highlight piano key
+    document.querySelectorAll('.piano-key').forEach(k => {
+      k.classList.remove('highlighted', 'correct-key', 'wrong-key');
+    });
+    drawStaff($('piano-staff-svg'), 'treble', state.pianoCurrentNote);
+  } else {
+    highlightPianoKey(state.pianoCurrentNote);
+  }
+}
+
+function handlePianoKeyClick(keyEl) {
+  if (!state.isPlaying || state.pianoLevel !== 'level3') return;
+
+  const chosen = keyEl.dataset.note;
+  const chosenOctave = parseInt(keyEl.dataset.octave);
+  const correct = state.pianoCurrentNote.note;
+  const correctOctave = state.pianoCurrentNote.octave;
+  state.total++;
+
+  // Clear previous key feedback
+  document.querySelectorAll('.piano-key').forEach(k => k.classList.remove('correct-key', 'wrong-key'));
+
+  const flash = $('piano-staff-flash');
+  flash.classList.remove('correct-flash', 'wrong-flash');
+  void flash.offsetWidth;
+
+  if (chosen === correct && chosenOctave === correctOctave) {
+    state.score++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+    keyEl.classList.add('correct-key');
+    flash.classList.add('correct-flash');
+    playSound('correct');
+
+    if (state.streak > 0 && state.streak % 10 === 0) {
+      launchConfetti();
+      showStreakCelebration(state.streak);
+      playSound('streak');
+    }
+  } else {
+    state.streak = 0;
+    keyEl.classList.add('wrong-key');
+    // Highlight correct key
+    document.querySelectorAll('.piano-key').forEach(k => {
+      if (k.dataset.note === correct && parseInt(k.dataset.octave) === correctOctave) {
+        k.classList.add('correct-key');
+      }
+    });
+    flash.classList.add('wrong-flash');
+    playSound('wrong');
+    $('piano-correct-note-display').textContent = 'The answer was ' + correct + correctOctave;
+  }
+
+  updatePianoGameUI();
+
+  state.isPlaying = false;
+  const wasCorrect = (chosen === correct && chosenOctave === correctOctave);
+  setTimeout(() => {
+    if (state.timeLeft > 0) {
+      state.isPlaying = true;
+      showNextPianoNote();
+    }
+  }, wasCorrect ? 300 : 800);
+}
+
+function handlePianoAnswer(btn) {
+  if (!state.isPlaying || state.pianoLevel === 'level3') return;
+
+  const chosen = btn.dataset.note;
+  const correct = state.pianoCurrentNote.note;
+  state.total++;
+
+  // Remove previous animation classes from both grids
+  document.querySelectorAll('#piano-answer-grid .answer-btn, #piano-sharps-grid .answer-btn').forEach(b => {
+    b.classList.remove('correct-pop', 'wrong-shake');
+  });
+
+  const flash = $('piano-screen-flash');
+  flash.classList.remove('correct-flash', 'wrong-flash');
+  void flash.offsetWidth;
+
+  if (chosen === correct) {
+    state.score++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+    btn.classList.add('correct-pop');
+    flash.classList.add('correct-flash');
+    playSound('correct');
+
+    if (state.streak > 0 && state.streak % 10 === 0) {
+      launchConfetti();
+      showStreakCelebration(state.streak);
+      playSound('streak');
+    }
+  } else {
+    state.streak = 0;
+    btn.classList.add('wrong-shake');
+    flash.classList.add('wrong-flash');
+    playSound('wrong');
+    $('piano-correct-note-display').textContent = 'The answer was ' + correct;
+  }
+
+  updatePianoGameUI();
+
+  state.isPlaying = false;
+  setTimeout(() => {
+    if (state.timeLeft > 0) {
+      state.isPlaying = true;
+      showNextPianoNote();
+    }
+  }, chosen === correct ? 300 : 800);
+}
+
+function updatePianoGameUI() {
+  $('piano-score-display').textContent = state.score;
+  $('piano-streak-display').textContent = state.streak;
+}
+
+function startPianoGame() {
+
+  state.score = 0;
+  state.total = 0;
+  state.streak = 0;
+  state.bestStreak = 0;
+  state.timeLeft = 60;
+  state.isPlaying = true;
+  state.gameMode = 'piano';
+  state.clef = 'piano';
+
+  // Read selected piano difficulty
+  const selBtn = document.querySelector('#piano-difficulty-options .option-btn.selected');
+  state.pianoLevel = selBtn ? selBtn.dataset.value : 'level1';
+  state.difficulty = state.pianoLevel === 'level1' ? 'Natural Notes' :
+                     state.pianoLevel === 'level2' ? 'Sharps & Flats' : 'Staff to Keys';
+
+  // Configure UI for difficulty level
+  const sharpsGrid = $('piano-sharps-grid');
+  const answerGrid = $('piano-answer-grid');
+  const staffContainer = $('piano-staff-container');
+
+  sharpsGrid.style.display = state.pianoLevel === 'level2' ? '' : 'none';
+  staffContainer.style.display = state.pianoLevel === 'level3' ? '' : 'none';
+  answerGrid.style.display = state.pianoLevel === 'level3' ? 'none' : '';
+
+  // Align natural notes to 14-column grid when sharps row is visible
+  if (state.pianoLevel === 'level2') {
+    answerGrid.classList.add('answer-grid-aligned');
+  } else {
+    answerGrid.classList.remove('answer-grid-aligned');
+  }
+
+  // Toggle clickable piano keys for Level 3
+  document.querySelectorAll('.piano-key').forEach(k => {
+    k.classList.remove('highlighted', 'correct-key', 'wrong-key');
+    if (state.pianoLevel === 'level3') {
+      k.classList.add('clickable');
+    } else {
+      k.classList.remove('clickable');
+    }
+  });
+
+  updatePianoGameUI();
+  $('piano-timer-display').textContent = '60';
+  $('piano-timer-bar').style.width = '100%';
+  $('piano-timer-bar').className = 'timer-bar';
+  $('piano-correct-note-display').textContent = '';
+  $('piano-screen-flash').classList.remove('correct-flash', 'wrong-flash');
+
+  playSound('startup');
+  showScreen('piano');
+  showNextPianoNote();
+
+  clearInterval(state.timerInterval);
+  const startTime = Date.now();
+  const duration = 60000;
+
+  state.timerInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    state.timeLeft = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+    const pct = Math.max(0, ((duration - elapsed) / duration) * 100);
+
+    $('piano-timer-display').textContent = state.timeLeft;
+    $('piano-timer-bar').style.width = pct + '%';
+
+    const bar = $('piano-timer-bar');
+    bar.classList.remove('warning', 'danger');
+    if (pct <= 16) bar.classList.add('danger');
+    else if (pct <= 33) bar.classList.add('warning');
+
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      state.isPlaying = false;
+      setTimeout(showResults, 500);
+    }
+  }, 100);
+}
+
+function exitPianoGame() {
+  clearInterval(state.timerInterval);
+  state.isPlaying = false;
+
+  if (state.total > 0) {
+    const accuracy = Math.round((state.score / state.total) * 100);
+    saveScore(state.score, state.total, accuracy, state.bestStreak, state.clef, state.difficulty);
+  }
+
+  updateMenuScores();
+  showScreen('menu');
+}
+
+// ==================== START ====================
+init();
+</script>
+</body>
+</html>
